@@ -29,6 +29,9 @@ import { markdownPreviewProvider } from "./markdownPreviewProvider";
 import * as chokidar from 'chokidar';
 import { cleanupLombokCache } from "./lombokSupport";
 
+//gcf add
+import { HoverRequest } from "vscode-languageclient";
+
 const syntaxClient: SyntaxLanguageClient = new SyntaxLanguageClient();
 const standardClient: StandardLanguageClient = new StandardLanguageClient();
 const jdtEventEmitter = new EventEmitter<Uri>();
@@ -160,6 +163,16 @@ export class OutputInfoCollector implements OutputChannel {
 }
 
 export function activate(context: ExtensionContext): Promise<ExtensionAPI> {
+
+	context.subscriptions.push(commands.registerCommand("java.method.callee", async () => {
+		const params = {
+            textDocument: standardClient.getClient().code2ProtocolConverter.asTextDocumentIdentifier(window.activeTextEditor.document),
+            position: standardClient.getClient().code2ProtocolConverter.asPosition(window.activeTextEditor.selection.active),
+        };
+		const hoverResponse = await standardClient.getClient().sendRequest(HoverRequest.type, params);
+		window.showInformationMessage(hoverResponse.contents.value);
+	}));
+
 	context.subscriptions.push(markdownPreviewProvider);
 	context.subscriptions.push(commands.registerCommand(Commands.TEMPLATE_VARIABLES, async () => {
 		markdownPreviewProvider.show(context.asAbsolutePath(path.join('document', `${Commands.TEMPLATE_VARIABLES}.md`)), 'Predefined Variables', "", context);
